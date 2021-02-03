@@ -10,26 +10,26 @@ A very simple HTTP router with an HTTP 404 fallback might look like this:
 package main
 
 import (
-  "net/http"
-  "regexp"
+	"net/http"
+	"regexp"
 
-  mdnhttp "github.com/maedan/http"
+	mdnhttp "github.com/maedan/http"
 )
 
-var howdyRegexp = regexp.Compile(`^/howdy/?$`)
+var howdyRegexp = regexp.MustCompile(`^/howdy/?$`)
 
 type myHandler struct{}
 
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-  w.Write([]byte("Howdy!"))
+	w.Write([]byte("Howdy!"))
 }
 
 func main() {
-  handler := mdnhttp.Switch(
-    mdnhttp.Route(http.MethodGet, howdyRegexp, &myHandler{}),
-    mdnhttp.ErrNotFound
-  )
-  http.ListenAndServe("0.0.0.0:8080", handler)
+	handler := mdnhttp.Switch(
+		mdnhttp.Route(http.MethodGet, howdyRegexp, &myHandler{}),
+		mdnhttp.ErrNotFound,
+	)
+	http.ListenAndServe("0.0.0.0:8080", handler)
 }
 ```
 
