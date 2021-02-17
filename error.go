@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// Simple generic implementation of http.Handler for an error case.
+// Simple handler for a generic HTTP error.
 var (
 	ErrBadRequest          = Error(errors.New("bad request"), http.StatusBadRequest)
 	ErrForbidden           = Error(errors.New("forbidden"), http.StatusForbidden)
@@ -22,7 +22,7 @@ type errorHandler struct {
 	Message    string `json:"message"`
 }
 
-// Error creates a Handler that simply outputs an error message.
+// Error creates a handler that simply outputs an error message.
 func Error(err error, code ...int) Handler {
 	var statusCode int
 	var message string
@@ -39,14 +39,11 @@ func Error(err error, code ...int) Handler {
 		statusCode = http.StatusInternalServerError
 	}
 
-	return &errorHandler{
+	h := &errorHandler{
 		StatusCode: statusCode,
 		Message:    message,
 	}
-}
-
-func (h *errorHandler) Match(req *http.Request) bool {
-	return true
+	return Always(h)
 }
 
 func (h *errorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {

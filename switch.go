@@ -6,9 +6,9 @@ type switchHandler struct {
 	handlers []Handler
 }
 
-// Switch creates a switching http.Handler with any number of sub-handlers.
-// When it serves an HTTP request, it will find the first sub-handler that matches and pass the request to that.
-// If no sub-handler is matched, HTTP 400 Bad Request is written.
+// Switch creates a switching handler with any number of next handlers.
+// When it serves an HTTP request, it will find the first next handler that matches and pass the request to that.
+// If no next handler is matched, HTTP 500 Internal Server Error is written.
 func Switch(handlers ...Handler) Handler {
 	return &switchHandler{handlers}
 }
@@ -31,6 +31,6 @@ func (h *switchHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if handler, ok := h.Find(req); ok {
 		handler.ServeHTTP(w, req)
 	} else {
-		ErrBadRequest.ServeHTTP(w, req)
+		ErrInternalServerError.ServeHTTP(w, req)
 	}
 }

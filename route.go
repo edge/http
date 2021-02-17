@@ -12,7 +12,7 @@ type routeHandler struct {
 	next http.Handler
 }
 
-// Route creates a standard implementation of Handler which matches on HTTP method and request URL path.
+// Route creates a handler which matches on HTTP method and request URL path.
 func Route(method string, path *regexp.Regexp, next http.Handler) Handler {
 	h := &routeHandler{
 		method: method,

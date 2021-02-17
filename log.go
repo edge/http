@@ -18,28 +18,23 @@ type logWriter struct {
 	w          http.ResponseWriter
 }
 
-// Log creates a logging Handler that logs each HTTP connection.
-// It passes the request directly to the next handler without modifying it.
+// Log creates a handler middleware that logs each HTTP connection passing through it.
 func Log(log zerolog.Logger, next http.Handler) Handler {
-	l := &logHandler{
+	h := &logHandler{
 		log:  log,
 		next: next,
 	}
-	return l
+	return Always(h)
 }
 
-func (l *logHandler) Match(req *http.Request) bool {
-	return true
-}
-
-func (l *logHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *logHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	lw := &logWriter{
-		log:        l.log,
+		log:        h.log,
 		req:        req,
 		statusCode: http.StatusOK,
 		w:          w,
 	}
-	l.next.ServeHTTP(lw, req)
+	h.next.ServeHTTP(lw, req)
 }
 
 func (lw *logWriter) Header() http.Header {
