@@ -41,7 +41,10 @@ Except for predefined handlers serving standard HTTP error responses, which you 
 
 | Type | Function | Description |
 |:-----|:---------|:------------|
+| Middleware | [Always()](./always.go) | Cause HTTP handler to always allow requests |
 | Page | [Error()](./error.go) | Return an error response |
 | Middleware | [Log()](./log.go) | Log connections |
+| Middleware | [Method()](./method.go) | Allows request if method matches |
+| Middleware | [Path()](./path.go) | Allows request if URL path matches |
 | Middleware | [Route()](./route.go) | Allows request if method and URL path match |
 | Middleware | [Switch()](./switch.go) | Passes request to first matching handler in a list |
