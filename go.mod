@@ -1,4 +1,4 @@
-module github.com/maedan/http
+module github.com/edge/http
 
 go 1.15
 

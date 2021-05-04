@@ -1,4 +1,4 @@
-# Maedan HTTP
+# Edge HTTP
 
 This Go library provides a collection of HTTP handlers and middleware that can be combined to form a complex set of request handling rules in a highly expressive, compact way.
 
@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"regexp"
 
-	mdnhttp "github.com/maedan/http"
+	edgehttp "github.com/edge/http"
 )
 
 var howdyRegexp = regexp.MustCompile(`^/howdy/?$`)
@@ -25,15 +25,15 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	handler := mdnhttp.Switch(
-		mdnhttp.Route(http.MethodGet, howdyRegexp, &myHandler{}),
-		mdnhttp.ErrNotFound,
+	handler := edgehttp.Switch(
+		edgehttp.Route(http.MethodGet, howdyRegexp, &myHandler{}),
+		edgehttp.ErrNotFound,
 	)
 	http.ListenAndServe("0.0.0.0:8080", handler)
 }
 ```
 
-As long as your handler implements [http.Handler](https://golang.org/pkg/net/http/#Handler), you can have it serve a page within Maedan HTTP. (If you want to write middleware, you must implement the [Handler](./http.go) superset interface.)
+As long as your handler implements [http.Handler](https://golang.org/pkg/net/http/#Handler), you can have it serve a page within Edge HTTP. (If you want to write middleware, you must implement the [Handler](./http.go) superset interface.)
 
 ## All Handlers
 
