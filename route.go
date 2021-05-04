@@ -5,27 +5,28 @@ import (
 	"regexp"
 )
 
-type routeHandler struct {
-	method string
-	path   *regexp.Regexp
+// RouteHandler matches HTTP requests by their method and request URL path.
+type RouteHandler struct {
+	Method string
+	Path   *regexp.Regexp
 
-	next http.Handler
+	Next http.Handler
 }
 
-// Route creates a handler which matches on HTTP method and request URL path.
-func Route(method string, path *regexp.Regexp, next http.Handler) Handler {
-	h := &routeHandler{
-		method: method,
-		path:   path,
-		next:   next,
+// Route handler.
+func Route(method string, path *regexp.Regexp, next http.Handler) RouteHandler {
+	return RouteHandler{
+		Method: method,
+		Path:   path,
+		Next:   next,
 	}
-	return h
 }
 
-func (h *routeHandler) Match(req *http.Request) bool {
-	return req.Method == h.method && h.path.Match([]byte(req.URL.Path))
+// Match request.
+func (h RouteHandler) Match(req *http.Request) bool {
+	return req.Method == h.Method && h.Path.Match([]byte(req.URL.Path))
 }
 
-func (h *routeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	h.next.ServeHTTP(w, req)
+func (h RouteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	h.Next.ServeHTTP(w, req)
 }

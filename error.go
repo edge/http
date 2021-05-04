@@ -17,13 +17,14 @@ var (
 	ErrUnauthorized        = Error(errors.New("unauthorized"), http.StatusUnauthorized)
 )
 
-type errorHandler struct {
-	StatusCode int    `json:"statusCode"`
+// ErrorHandler is a simple handler that responds to HTTP requests with a JSON error.
+type ErrorHandler struct {
 	Message    string `json:"message"`
+	StatusCode int    `json:"statusCode"`
 }
 
-// Error creates a handler that simply outputs an error message.
-func Error(err error, code ...int) Handler {
+// Error handler.
+func Error(err error, code ...int) ErrorHandler {
 	var statusCode int
 	var message string
 
@@ -39,14 +40,18 @@ func Error(err error, code ...int) Handler {
 		statusCode = http.StatusInternalServerError
 	}
 
-	h := &errorHandler{
-		StatusCode: statusCode,
+	return ErrorHandler{
 		Message:    message,
+		StatusCode: statusCode,
 	}
-	return Always(h)
 }
 
-func (h *errorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+// Match request.
+func (h ErrorHandler) Match(*http.Request) bool {
+	return true
+}
+
+func (h ErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(h.StatusCode)
 	b, err := json.Marshal(h)
 	if err != nil {

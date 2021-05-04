@@ -2,7 +2,7 @@
 
 This Go library provides a collection of HTTP handlers and middleware that can be combined to form a complex set of request handling rules in a highly expressive, compact way.
 
-## Introduction
+## Example
 
 A very simple HTTP router with an HTTP 404 fallback might look like this:
 
@@ -35,16 +35,6 @@ func main() {
 
 As long as your handler implements [http.Handler](https://golang.org/pkg/net/http/#Handler), you can have it serve a page within Edge HTTP. (If you want to write middleware, you must implement the [Handler](./http.go) superset interface.)
 
-## All Handlers
+## Further Reading
 
-Except for predefined handlers serving standard HTTP error responses, which you can find in a perfectly readable list in [error.go](./error.go).
-
-| Type | Function | Description |
-|:-----|:---------|:------------|
-| Middleware | [Always()](./always.go) | Cause HTTP handler to always allow requests |
-| Page | [Error()](./error.go) | Return an error response |
-| Middleware | [Log()](./log.go) | Log connections |
-| Middleware | [Method()](./method.go) | Allows request if method matches |
-| Middleware | [Path()](./path.go) | Allows request if URL path matches |
-| Middleware | [Route()](./route.go) | Allows request if method and URL path match |
-| Middleware | [Switch()](./switch.go) | Passes request to first matching handler in a list |
+Find out more with `go doc` - this package is fully documented.

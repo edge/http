@@ -6,66 +6,79 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type logHandler struct {
-	level zerolog.Level
-	log   zerolog.Logger
-	next  http.Handler
+// LogHandler logs each HTTP connection passing through it.
+type LogHandler struct {
+	Level zerolog.Level
+	Log   zerolog.Logger
+	Next  http.Handler
 }
 
-type logWriter struct {
-	level      zerolog.Level
-	log        zerolog.Logger
-	req        *http.Request
-	statusCode int
-	w          http.ResponseWriter
-}
-
-// Log creates a handler middleware that logs each HTTP connection passing through it.
-func Log(log zerolog.Logger, level zerolog.Level, next http.Handler) Handler {
-	h := &logHandler{
-		level: level,
-		log:   log,
-		next:  next,
+// Log handler.
+func Log(log zerolog.Logger, level zerolog.Level, next http.Handler) LogHandler {
+	return LogHandler{
+		Level: level,
+		Log:   log,
+		Next:  next,
 	}
-	return Always(h)
 }
 
-func (h *logHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	lw := &logWriter{
-		level:      h.level,
-		log:        h.log,
-		req:        req,
-		statusCode: http.StatusOK,
-		w:          w,
+// Match request.
+func (h LogHandler) Match(*http.Request) bool {
+	return true
+}
+
+func (h LogHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	lw := LogWriter{
+		Level:      h.Level,
+		Log:        h.Log,
+		Req:        req,
+		StatusCode: http.StatusOK,
+		W:          w,
 	}
-	h.next.ServeHTTP(lw, req)
+	h.Next.ServeHTTP(lw, req)
 }
 
-func (lw *logWriter) Header() http.Header {
-	return lw.w.Header()
+// LogWriter wraps http.ResponseWriter to log a request as the response is served.
+//
+// LogHandler uses this type internally to enable per-request logging.
+// This type is exported for documentary reasons, and should not normally be used directly.
+type LogWriter struct {
+	Level      zerolog.Level
+	Log        zerolog.Logger
+	Req        *http.Request
+	StatusCode int
+	W          http.ResponseWriter
 }
 
-func (lw *logWriter) Write(b []byte) (int, error) {
+// Header returns the header map that will be returned by WriteHeader.
+// See http.ResponseWriter.
+func (lw LogWriter) Header() http.Header {
+	return lw.W.Header()
+}
+
+func (lw LogWriter) Write(b []byte) (int, error) {
 	var evt *zerolog.Event
 	if lw.isError() {
-		evt = lw.log.Error()
+		evt = lw.Log.Error()
 	} else {
-		evt = lw.log.WithLevel(lw.level)
+		evt = lw.Log.WithLevel(lw.Level)
 	}
 	size := len(b)
-	evt.Str("method", lw.req.Method).
-		Str("path", lw.req.URL.Path).
-		Int("status", lw.statusCode).
+	evt.Str("method", lw.Req.Method).
+		Str("path", lw.Req.URL.Path).
+		Int("status", lw.StatusCode).
 		Msgf("(%dB)", size)
 
-	return lw.w.Write(b)
+	return lw.W.Write(b)
 }
 
-func (lw *logWriter) WriteHeader(status int) {
-	lw.statusCode = status
-	lw.w.WriteHeader(status)
+// WriteHeader sends an HTTP response header with the provided status code.
+// See http.ResponseWriter.
+func (lw LogWriter) WriteHeader(status int) {
+	lw.StatusCode = status
+	lw.W.WriteHeader(status)
 }
 
-func (lw *logWriter) isError() bool {
-	return lw.statusCode >= http.StatusInternalServerError
+func (lw LogWriter) isError() bool {
+	return lw.StatusCode >= http.StatusInternalServerError
 }

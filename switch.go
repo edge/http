@@ -1,20 +1,24 @@
 package http
 
-import "net/http"
+import (
+	"net/http"
+)
 
-type switchHandler struct {
-	handlers []Handler
+// SwitchHandler matches HTTP requests arbitrarily, based on any number of 'next' handlers.
+// When serving an HTTP request, it tests each 'next' handler in sequence, and resolves through the first that matches the request.
+// If no handler matches, HTTP 500 Internal Server Error is written.
+type SwitchHandler struct {
+	Next []Handler
 }
 
-// Switch creates a switching handler with any number of next handlers.
-// When it serves an HTTP request, it will find the first next handler that matches and pass the request to that.
-// If no next handler is matched, HTTP 500 Internal Server Error is written.
-func Switch(handlers ...Handler) Handler {
-	return &switchHandler{handlers}
+// Switch handler.
+func Switch(next ...Handler) SwitchHandler {
+	return SwitchHandler{next}
 }
 
-func (h *switchHandler) Find(req *http.Request) (Handler, bool) {
-	for _, handler := range h.handlers {
+// Find the first matching 'next' handler.
+func (h SwitchHandler) Find(req *http.Request) (Handler, bool) {
+	for _, handler := range h.Next {
 		if handler.Match(req) {
 			return handler, true
 		}
@@ -22,12 +26,13 @@ func (h *switchHandler) Find(req *http.Request) (Handler, bool) {
 	return nil, false
 }
 
-func (h *switchHandler) Match(req *http.Request) bool {
+// Match request.
+func (h SwitchHandler) Match(req *http.Request) bool {
 	_, ok := h.Find(req)
 	return ok
 }
 
-func (h *switchHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h SwitchHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if handler, ok := h.Find(req); ok {
 		handler.ServeHTTP(w, req)
 	} else {

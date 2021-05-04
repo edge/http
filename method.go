@@ -4,24 +4,25 @@ import (
 	"net/http"
 )
 
-type methodHandler struct {
-	method string
-	next   http.Handler
+// MethodHandler matches HTTP requests by their method.
+type MethodHandler struct {
+	Method string
+	Next   http.Handler
 }
 
-// Method creates a handler which matches on HTTP method.
-func Method(method string, next http.Handler) Handler {
-	h := &methodHandler{
-		method: method,
-		next:   next,
+// Method handler.
+func Method(method string, next http.Handler) MethodHandler {
+	return MethodHandler{
+		Method: method,
+		Next:   next,
 	}
-	return h
 }
 
-func (h *methodHandler) Match(req *http.Request) bool {
-	return req.Method == h.method
+// Match request.
+func (h *MethodHandler) Match(req *http.Request) bool {
+	return req.Method == h.Method
 }
 
-func (h *methodHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	h.next.ServeHTTP(w, req)
+func (h *MethodHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	h.Next.ServeHTTP(w, req)
 }
