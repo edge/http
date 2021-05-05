@@ -6,6 +6,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var (
+	okStatusCode = []int{
+		http.StatusOK,
+		http.StatusPermanentRedirect,
+		http.StatusTemporaryRedirect,
+	}
+)
+
 // LogHandler logs each HTTP connection passing through it.
 type LogHandler struct {
 	Level zerolog.Level
@@ -28,7 +36,7 @@ func (h LogHandler) Match(*http.Request) bool {
 }
 
 func (h LogHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	lw := LogWriter{
+	lw := &LogWriter{
 		Level:      h.Level,
 		Log:        h.Log,
 		Req:        req,
@@ -52,11 +60,11 @@ type LogWriter struct {
 
 // Header returns the header map that will be returned by WriteHeader.
 // See http.ResponseWriter.
-func (lw LogWriter) Header() http.Header {
+func (lw *LogWriter) Header() http.Header {
 	return lw.W.Header()
 }
 
-func (lw LogWriter) Write(b []byte) (int, error) {
+func (lw *LogWriter) Write(b []byte) (int, error) {
 	size, err := lw.W.Write(b)
 	var evt *zerolog.Event
 	if lw.isError() {
@@ -73,11 +81,16 @@ func (lw LogWriter) Write(b []byte) (int, error) {
 
 // WriteHeader sends an HTTP response header with the provided status code.
 // See http.ResponseWriter.
-func (lw LogWriter) WriteHeader(status int) {
+func (lw *LogWriter) WriteHeader(status int) {
 	lw.StatusCode = status
 	lw.W.WriteHeader(status)
 }
 
-func (lw LogWriter) isError() bool {
-	return lw.StatusCode >= http.StatusInternalServerError
+func (lw *LogWriter) isError() bool {
+	for _, okcode := range okStatusCode {
+		if lw.StatusCode == okcode {
+			return false
+		}
+	}
+	return true
 }
