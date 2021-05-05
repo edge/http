@@ -57,19 +57,18 @@ func (lw LogWriter) Header() http.Header {
 }
 
 func (lw LogWriter) Write(b []byte) (int, error) {
+	size, err := lw.W.Write(b)
 	var evt *zerolog.Event
 	if lw.isError() {
 		evt = lw.Log.Error()
 	} else {
 		evt = lw.Log.WithLevel(lw.Level)
 	}
-	size := len(b)
 	evt.Str("method", lw.Req.Method).
 		Str("path", lw.Req.URL.Path).
 		Int("status", lw.StatusCode).
-		Msgf("(%dB)", size)
-
-	return lw.W.Write(b)
+		Msgf("%dB", size)
+	return size, err
 }
 
 // WriteHeader sends an HTTP response header with the provided status code.
