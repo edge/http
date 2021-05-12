@@ -6,7 +6,7 @@ import (
 
 // SwitchHandler matches HTTP requests arbitrarily, based on any number of 'next' handlers.
 // When serving an HTTP request, it tests each 'next' handler in sequence, and resolves through the first that matches the request.
-// If no handler matches, HTTP 500 Internal Server Error is written.
+// If no handler matches, the request is not handled.
 type SwitchHandler struct {
 	Next []Handler
 }
@@ -35,7 +35,5 @@ func (h SwitchHandler) Match(req *http.Request) bool {
 func (h SwitchHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if handler, ok := h.Find(req); ok {
 		handler.ServeHTTP(w, req)
-	} else {
-		ErrInternalServerError.ServeHTTP(w, req)
 	}
 }
