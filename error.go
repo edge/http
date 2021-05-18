@@ -53,9 +53,15 @@ func (h ErrorHandler) Match(*http.Request) bool {
 
 func (h ErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(h.StatusCode)
-	b, err := json.Marshal(h)
-	if err != nil {
-		w.Write([]byte(fmt.Sprintf("%s", err)))
+	var b []byte
+	var err error
+	if clientAcceptsJSON(req) {
+		b, err = json.Marshal(h)
+		if err != nil {
+			b = []byte(fmt.Sprintf("%s", err))
+		}
+	} else {
+		b = []byte(h.Message)
 	}
 	w.Write(b)
 }
