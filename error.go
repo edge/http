@@ -56,11 +56,10 @@ func (h ErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var b []byte
 	var err error
 	if clientAcceptsJSON(req) {
-		if w.Header().Get("Content-Type") != "application/json" {
-			w.Header().Set("Content-Type", "application/json")
-		}
 		b, err = json.Marshal(h)
-		if err != nil {
+		if err == nil {
+			w.Header().Set("Content-Type", "application/json")
+		} else {
 			b = []byte(fmt.Sprintf("%s", err))
 		}
 	} else {

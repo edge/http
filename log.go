@@ -14,7 +14,7 @@ var (
 	}
 )
 
-// LogHandler logs each HTTP connection passing through it.
+// LogHandler logs each HTTP request passing through it.
 type LogHandler struct {
 	Level zerolog.Level
 	Log   zerolog.Logger
@@ -38,7 +38,7 @@ func (h LogHandler) Match(*http.Request) bool {
 func (h LogHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	lw := &LogWriter{
 		Level:      h.Level,
-		Log:        h.Log,
+		Log:        &h.Log,
 		Req:        req,
 		StatusCode: http.StatusOK,
 		W:          w,
@@ -48,18 +48,17 @@ func (h LogHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // LogWriter wraps http.ResponseWriter to log a request as the response is served.
 //
-// LogHandler uses this type internally to enable per-request logging.
+// LogHandler uses this type internally.
 // This type is exported for documentary reasons, and should not normally be used directly.
 type LogWriter struct {
 	Level      zerolog.Level
-	Log        zerolog.Logger
+	Log        *zerolog.Logger
 	Req        *http.Request
 	StatusCode int
 	W          http.ResponseWriter
 }
 
-// Header returns the header map that will be returned by WriteHeader.
-// See http.ResponseWriter.
+// Header implements http.ResponseWriter.
 func (lw *LogWriter) Header() http.Header {
 	return lw.W.Header()
 }
@@ -79,8 +78,7 @@ func (lw *LogWriter) Write(b []byte) (int, error) {
 	return size, err
 }
 
-// WriteHeader sends an HTTP response header with the provided status code.
-// See http.ResponseWriter.
+// WriteHeader implements http.ResponseWriter.
 func (lw *LogWriter) WriteHeader(status int) {
 	lw.StatusCode = status
 	lw.W.WriteHeader(status)

@@ -2,8 +2,11 @@ package http
 
 import "net/http"
 
-// JSONHandler enforces Accept: application/json for requests and adds the accordant Content-Type header to all responses.
+// JSONHandler enforces Accept: application/json for requests.
 // It also enforces Content-Type: application/json on requests that have a body, e.g. POST.
+//
+// Note that it does not automatically add a Content-Type header to the response.
+// This must be done in user code.
 type JSONHandler struct {
 	Next http.Handler
 }
@@ -23,7 +26,6 @@ func (h JSONHandler) Match(req *http.Request) bool {
 }
 
 func (h JSONHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	h.Next.ServeHTTP(w, req)
 }
 
